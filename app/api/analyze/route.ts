@@ -99,7 +99,7 @@ ${answers.legacy}
 请根据以上变量，生成完整的生命代码解析报告。`;
 
     const message = await client.chat.completions.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-6",
       max_tokens: 4096,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
