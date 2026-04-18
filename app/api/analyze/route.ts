@@ -1,8 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  baseURL: process.env.API_BASE_URL,
+});
 
 const SYSTEM_PROMPT = `你是一位融合了宇宙意识、科技隐喻与禅意智慧的命运分析师。
 
@@ -93,14 +96,16 @@ ${answers.legacy}
 
 请根据以上变量，生成完整的生命代码解析报告。`;
 
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+    const message = await client.chat.completions.create({
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userContent }],
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userContent },
+      ],
     });
 
-    const report = message.content[0].type === "text" ? message.content[0].text : "";
+    const report = message.choices[0]?.message?.content ?? "";
 
     // 提取姓名（basic_info 第一个词）
     const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "匿名";
