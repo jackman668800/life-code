@@ -99,8 +99,8 @@ ${answers.legacy}
 请根据以上变量，生成完整的生命代码解析报告。`;
 
     const stream = await client.chat.completions.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 2000,
+      model: "gemini-2.0-flash",
+      max_tokens: 8192,
       stream: true,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
