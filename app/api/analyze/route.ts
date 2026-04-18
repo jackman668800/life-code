@@ -2,6 +2,8 @@ import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+export const maxDuration = 60;
+
 const client = new OpenAI({
   apiKey: process.env.ANTHROPIC_API_KEY,
   baseURL: process.env.API_BASE_URL,
