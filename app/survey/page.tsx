@@ -91,10 +91,10 @@ export default function SurveyPage() {
 
   return (
     <main
-      className="min-h-screen px-4 py-12"
+      className="min-h-screen px-4 py-8 pb-24"
       style={{ background: "radial-gradient(ellipse at top, #061206 0%, #050a05 60%)" }}
     >
-      <div className="max-w-2xl mx-auto space-y-10">
+      <div className="max-w-2xl mx-auto space-y-7">
 
         {/* Header */}
         <div className="space-y-2">
@@ -173,20 +173,33 @@ export default function SurveyPage() {
         ))}
 
         {/* Submit */}
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-red-400 px-1">{error}</p>}
 
-        <div className="pt-4 pb-16">
+        <div className="pt-2 pb-8">
           <button
             onClick={handleSubmit}
             disabled={!allFilled || loading}
-            className="w-full py-4 text-base font-bold tracking-widest transition-all duration-300"
+            className="w-full py-5 text-base font-bold transition-all duration-300 active:scale-95"
             style={{
               border: `1px solid ${allFilled ? "#00ff88" : "#1a3a1a"}`,
               color: allFilled ? "#00ff88" : "#1a3a1a",
               background: "transparent",
-              letterSpacing: "0.15em",
+              letterSpacing: "0.12em",
               cursor: allFilled && !loading ? "pointer" : "not-allowed",
               opacity: loading ? 0.6 : 1,
+              WebkitTapHighlightColor: "transparent",
+              fontSize: "clamp(0.85rem, 4vw, 1rem)",
+            }}
+            onTouchStart={(e) => {
+              if (!allFilled || loading) return;
+              e.currentTarget.style.background = "#00ff88";
+              e.currentTarget.style.color = "#050a05";
+            }}
+            onTouchEnd={(e) => {
+              setTimeout(() => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = allFilled ? "#00ff88" : "#1a3a1a";
+              }, 200);
             }}
             onMouseEnter={(e) => {
               if (!allFilled || loading) return;
@@ -198,7 +211,7 @@ export default function SurveyPage() {
               e.currentTarget.style.color = allFilled ? "#00ff88" : "#1a3a1a";
             }}
           >
-            {loading ? "SCANNING..." : "// 提交完成，开始扫描 →"}
+            {loading ? "SCANNING..." : "// 提交，开始扫描 →"}
           </button>
 
           {loading && (
