@@ -80,8 +80,21 @@ export default function SurveyPage() {
         body: JSON.stringify({ answers }),
       });
       if (!res.ok) throw new Error("分析失败，请重试");
-      const data = await res.json();
-      sessionStorage.setItem("life_code_result", data.report);
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let report = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          report += decoder.decode(value, { stream: true });
+        }
+      }
+
+      if (!report) throw new Error("分析失败，请重试");
+      sessionStorage.setItem("life_code_result", report);
       router.push("/result");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "未知错误");

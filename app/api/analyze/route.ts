@@ -98,39 +98,56 @@ ${answers.legacy}
 
 请根据以上变量，生成完整的生命代码解析报告。`;
 
-    const message = await client.chat.completions.create({
+    const stream = await client.chat.completions.create({
       model: "claude-sonnet-4-6",
       max_tokens: 2000,
+      stream: true,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userContent },
       ],
     });
 
-    const report = message.choices[0]?.message?.content ?? "";
+    const encoder = new TextEncoder();
+    let fullReport = "";
 
-    // 提取姓名（basic_info 第一个词）
-    const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "匿名";
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content ?? "";
+            if (text) {
+              fullReport += text;
+              controller.enqueue(encoder.encode(text));
+            }
+          }
 
-    // 异步写入 Supabase，不阻塞响应
-    supabase
-      .from("submissions")
-      .insert({
-        name,
-        basic_info: answers.basic_info,
-        origin: answers.origin,
-        critical_error: answers.critical_error,
-        core_loop: answers.core_loop,
-        const_value: answers.const,
-        current_status: answers.status,
-        legacy: answers.legacy,
-        report,
-      })
-      .then(({ error }) => {
-        if (error) console.error("Supabase insert error:", error.message);
-      });
+          // 写入 Supabase
+          const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "匿名";
+          supabase.from("submissions").insert({
+            name,
+            basic_info: answers.basic_info,
+            origin: answers.origin,
+            critical_error: answers.critical_error,
+            core_loop: answers.core_loop,
+            const_value: answers.const,
+            current_status: answers.status,
+            legacy: answers.legacy,
+            report: fullReport,
+          }).then(({ error }) => {
+            if (error) console.error("Supabase insert error:", error.message);
+          });
 
-    return NextResponse.json({ report });
+          controller.close();
+        } catch (err) {
+          controller.error(err);
+        }
+      },
+    });
+
+    return new Response(readable, {
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
   } catch (error) {
     console.error("Analysis error:", error);
     return NextResponse.json({ error: "分析失败" }, { status: 500 });
