@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -100,6 +101,28 @@ ${answers.legacy}
     });
 
     const report = message.content[0].type === "text" ? message.content[0].text : "";
+
+    // 提取姓名（basic_info 第一个词）
+    const name = (answers.basic_info || "").split(/[，,、\s]/)[0].trim() || "匿名";
+
+    // 异步写入 Supabase，不阻塞响应
+    supabase
+      .from("submissions")
+      .insert({
+        name,
+        basic_info: answers.basic_info,
+        origin: answers.origin,
+        critical_error: answers.critical_error,
+        core_loop: answers.core_loop,
+        const_value: answers.const,
+        current_status: answers.status,
+        legacy: answers.legacy,
+        report,
+      })
+      .then(({ error }) => {
+        if (error) console.error("Supabase insert error:", error.message);
+      });
+
     return NextResponse.json({ report });
   } catch (error) {
     console.error("Analysis error:", error);
