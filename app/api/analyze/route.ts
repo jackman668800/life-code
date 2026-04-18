@@ -100,7 +100,7 @@ ${answers.legacy}
 
     const message = await client.chat.completions.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 4096,
+      max_tokens: 2000,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userContent },
